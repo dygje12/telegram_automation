@@ -1,21 +1,21 @@
-# Dokumentasi Aplikasi Otomatisasi Telegram
+# Telegram Automation Bot
 
 ## Pendahuluan
 
-Aplikasi ini dirancang untuk mengotomatisasi pengiriman pesan teks ke grup Telegram menggunakan akun pengguna tunggal. Aplikasi ini fokus pada stabilitas, penanganan error, dan kepatuhan terhadap praktik anti-pemblokiran.
+Aplikasi ini adalah bot otomatisasi Telegram yang dirancang untuk mengirim pesan teks ke grup menggunakan akun pengguna tunggal (userbot). Fokus utama aplikasi ini adalah stabilitas, penanganan error yang robust, dan kepatuhan terhadap praktik anti-pemblokiran untuk meminimalkan risiko akun.
 
 ## Fitur Utama
 
-- **Autentikasi & Sesi:** Menggunakan API MTProto untuk login via nomor HP + OTP, dengan dukungan 2FA.
+- **Autentikasi Aman:** Menggunakan API MTProto untuk login via nomor HP + OTP, dengan dukungan Two-Factor Authentication (2FA).
 - **Pengiriman Pesan Otomatis:** Mengirim pesan teks secara acak dari channel sumber ke grup target.
-- **Delay Acak:** Menerapkan delay acak antar pesan (5-10 detik) dan antar siklus (1.1-1.3 jam) untuk mengurangi risiko pemblokiran.
+- **Delay Adaptif:** Menerapkan delay acak antar pesan (5-10 detik) dan antar siklus (1.1-1.3 jam) untuk mengurangi risiko pemblokiran oleh Telegram.
 - **Sumber Pesan Dinamis:** Pesan diambil secara acak dari channel Telegram spesifik (`@message_source`).
 - **Daftar Grup Target Dinamis:** Daftar grup target diambil dari channel Telegram spesifik (`@group_list`). Aplikasi akan mengirim pesan ke SEMUA grup yang tidak di-blacklist dalam satu siklus.
-- **Manajemen Blacklist:**
-    - **Blokir Permanen:** Untuk error yang membuat pengiriman tidak mungkin (misal: `ChatForbidden`, `ChatIdInvalid`, `UserBlocked`, `PeerIdInvalid`, `ChatWriteForbiddenError`, `UserBannedInChannelError`).
-    - **Blokir Sementara:** Untuk `SlowModeWait` (dilewati) dan `FloodWait` (dengan pembersihan otomatis setelah masa blokir berakhir).
-- **File Konfigurasi:** Semua kredensial, channel, dan parameter delay dapat dikonfigurasi melalui `config.json`.
-- **Log Aktivitas:** Mencatat aktivitas dengan detail timestamp, grup tujuan, status pesan (sukses/gagal), dan error spesifik ke `activity.log` dalam format teks biasa yang mudah dibaca.
+- **Manajemen Blacklist Cerdas:**
+    - **Blokir Permanen:** Untuk error fatal yang membuat pengiriman tidak mungkin (misal: `ChatForbidden`, `ChatIdInvalid`, `UserBlocked`, `PeerIdInvalid`, `ChatWriteForbiddenError`, `UserBannedInChannelError`). Entitas yang diblokir permanen tidak akan dicoba lagi di siklus berikutnya.
+    - **Blokir Sementara:** Untuk `SlowModeWait` (dilewati untuk siklus saat ini) dan `FloodWait` (dengan pembersihan otomatis setelah masa blokir berakhir).
+- **Konfigurasi Fleksibel:** Semua kredensial, channel, dan parameter delay dapat dikonfigurasi melalui `config.json`.
+- **Log Aktivitas Komprehensif:** Mencatat semua aktivitas dengan detail timestamp, grup tujuan, status pesan (sukses/gagal), dan error spesifik ke `activity.log` dalam format teks biasa yang mudah dibaca.
 
 ## Persyaratan Sistem
 
@@ -24,17 +24,27 @@ Aplikasi ini dirancang untuk mengotomatisasi pengiriman pesan teks ke grup Teleg
 
 ## Instalasi & Setup
 
-1.  **Clone atau Unduh Proyek:**
-    Unduh semua file proyek ke direktori lokal Anda.
+1.  **Unduh Proyek:**
+    Unduh semua file proyek ke direktori lokal Anda. Anda bisa mendapatkan paket lengkap (termasuk tutorial instalasi VPS) dalam format `.zip`.
 
 2.  **Instal Dependensi:**
-    Buka terminal di direktori proyek dan jalankan perintah berikut:
+    Buka terminal di direktori proyek Anda dan jalankan perintah berikut untuk menginstal semua dependensi Python yang diperlukan:
     ```bash
-    pip install telethon
+    pip install -r requirements.txt
     ```
 
 3.  **Konfigurasi `config.json`:**
-    Buka file `config.json` dan isi detail berikut:
+    Buka file `config.json` dan isi detail konfigurasi Anda. Ini adalah langkah **sangat penting**.
+
+    **PENTING: KEAMANAN KREDENSIAL**
+    File `config.json` berisi informasi sensitif (API ID dan API Hash). Untuk alasan keamanan, **JANGAN PERNAH MENGUNGGAH `config.json` yang berisi kredensial asli Anda ke repositori publik seperti GitHub.**
+
+    **Rekomendasi:**
+    *   Untuk pengembangan lokal, Anda bisa menggunakan `config.json` dengan kredensial Anda.
+    *   Untuk deployment di lingkungan produksi (misalnya VPS), sangat disarankan untuk menggunakan **variabel lingkungan (environment variables)** untuk `API_ID` dan `API_HASH`.
+    *   Jika Anda tetap ingin menyertakan `config.json` di repositori (misalnya untuk tujuan dokumentasi), buatlah salinan `config.json.example` dengan nilai placeholder dan tambahkan `config.json` ke file `.gitignore` Anda.
+
+    **Detail Konfigurasi:**
     -   `telegram.api_id`: API ID Anda dari [my.telegram.org](https://my.telegram.org/).
     -   `telegram.api_hash`: API Hash Anda dari [my.telegram.org](https://my.telegram.org/).
     -   `telegram.message_source_channel`: ID numerik atau username channel Telegram tempat pesan akan diambil. Contoh: `-1001234567890` atau `@your_message_channel`.
@@ -44,14 +54,14 @@ Aplikasi ini dirancang untuk mengotomatisasi pengiriman pesan teks ke grup Teleg
     -   `delays.min_delay_cycle`: Delay minimum antar siklus dalam jam (misal: 1.1).
     -   `delays.max_delay_cycle`: Delay maksimum antar siklus dalam jam (misal: 1.3).
 
-    **Contoh `config.json`:**
+    **Contoh `config.json` (dengan nilai placeholder):**
     ```json
     {
         "telegram": {
-            "api_id": 21507942,
-            "api_hash": "399fae9734796b25b068050f5f03b698",
-            "message_source_channel": -1002779817596,
-            "group_list_channel": -1002790437700
+            "api_id": 1234567,           // Ganti dengan API ID Anda dari my.telegram.org
+            "api_hash": "your_api_hash_here", // Ganti dengan API Hash Anda dari my.telegram.org
+            "message_source_channel": "https://t.me/your_source_channel_username_or_id",
+            "group_list_channel": "https://t.me/your_group_list_channel_username_or_id"
         },
         "delays": {
             "min_delay_message": 5,
@@ -62,14 +72,46 @@ Aplikasi ini dirancang untuk mengotomatisasi pengiriman pesan teks ke grup Teleg
     }
     ```
 
-## Cara Menjalankan Aplikasi
+4.  **File `.gitignore`:**
+    Pastikan Anda memiliki file `.gitignore` di root proyek Anda untuk mengecualikan file-file sensitif dan tidak perlu dari kontrol versi. Ini sangat penting untuk mencegah pengunggahan kredensial dan file sesi.
+
+    **Isi `.gitignore` yang Direkomendasikan:**
+    ```
+    # Python
+    __pycache__/
+    *.pyc
+    *.pyo
+    *.pyd
+    .Python/
+
+    # Specific to this project
+    *.session  # Penting: Mencegah file sesi Telegram terunggah
+    activity.log
+    *.zip
+
+    # Mypy cache
+    .mypy_cache/
+
+    # Ruff cache
+    .ruff_cache/
+    
+    # Configuration file with sensitive data (jika Anda tidak menggunakan variabel lingkungan)
+    config.json
+    ```
+
+5.  **Catatan tentang `blacklist.json` dan `activity.log`:**
+    File `blacklist.json` dan `activity.log` akan dibuat secara otomatis oleh aplikasi jika belum ada. Anda tidak perlu membuatnya secara manual.
+
+## Cara Menjalankan Aplikasi (Lokal)
 
 1.  Pastikan Anda telah menyelesaikan langkah-langkah instalasi dan setup di atas.
 2.  Buka terminal di direktori proyek.
 3.  Jalankan aplikasi dengan perintah:
     ```bash
-    python3.11 main.py
+    python3 main.py
     ```
+    *(Gunakan `python3.11 main.py` jika Anda ingin spesifik ke Python 3.11)*
+
 4.  Pada saat pertama kali dijalankan, aplikasi akan meminta nomor telepon, kode OTP, dan kata sandi 2FA (jika diaktifkan) untuk login ke akun Telegram Anda. Ikuti instruksi di terminal.
 5.  Setelah login berhasil, aplikasi akan mulai beroperasi secara otomatis sesuai dengan konfigurasi.
 
@@ -99,4 +141,6 @@ Semua aktivitas aplikasi akan dicatat dalam file `activity.log` di direktori pro
 -   **`SlowModeWaitError`:** Grup memiliki mode lambat aktif. Aplikasi akan melewati grup ini untuk siklus saat ini.
 
 Jika Anda mengalami masalah lain, periksa file `activity.log` untuk detail error dan hubungi pengembang (saya) dengan log tersebut.
+
+
 

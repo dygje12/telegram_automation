@@ -5,15 +5,15 @@ Tutorial ini akan memandu Anda langkah demi langkah untuk menginstal dan menjala
 **Asumsi:**
 *   Anda sudah memiliki VPS Ubuntu (atau distribusi Linux lain yang menggunakan `systemd`).
 *   Anda sudah login ke VPS Anda melalui SSH sebagai pengguna dengan hak `sudo`.
-*   Anda telah mengunduh file `telegram_automation_with_service.zip` ke komputer lokal Anda.
+*   Anda telah mengunduh file `telegram_automation_final.zip` ke komputer lokal Anda.
 
 ## Langkah 1: Unggah File Proyek ke VPS
 
-Unggah file `telegram_automation_with_service.zip` ke direktori home pengguna Anda di VPS (misalnya `/home/ubuntu/`). Anda bisa menggunakan `scp` atau `sftp`.
+Unggah file `telegram_automation_final.zip` ke direktori home pengguna Anda di VPS (misalnya `/home/ubuntu/`). Anda bisa menggunakan `scp` atau `sftp`.
 
 Contoh menggunakan `scp` dari terminal lokal Anda:
 ```bash
-scp /path/to/your/telegram_automation_with_service.zip username@your_vps_ip:/home/username/
+scp /path/to/your/telegram_automation_final.zip username@your_vps_ip:/home/username/
 ```
 *(Ganti `/path/to/your/` dengan lokasi file di komputer lokal Anda, `username` dengan username VPS Anda, dan `your_vps_ip` dengan alamat IP VPS Anda.)*
 
@@ -31,12 +31,12 @@ Login ke VPS Anda melalui SSH dan ikuti langkah-langkah berikut:
 2.  **Ekstrak File Zip:**
     Ekstrak isi file zip yang telah Anda unggah ke direktori ini.
     ```bash
-    unzip /home/ubuntu/telegram_automation_with_service.zip
+    unzip /home/ubuntu/telegram_automation_final.zip
     ```
-    *(Catatan: Sesuaikan path `/home/ubuntu/telegram_automation_with_service.zip` jika Anda mengunggahnya ke lokasi lain.)*
+    *(Catatan: Sesuaikan path `/home/ubuntu/telegram_automation_final.zip` jika Anda mengunggahnya ke lokasi lain.)*
 
 3.  **Instal Dependensi Python:**
-    Pastikan `pip` terinstal, lalu instal pustaka `telethon` yang diperlukan oleh aplikasi. Perbarui daftar paket dan instal `python3-pip` jika belum ada.
+    Pastikan `pip` terinstal, lalu instal pustaka yang diperlukan oleh aplikasi. Perbarui daftar paket dan instal `python3-pip` jika belum ada.
     ```bash
     sudo apt update
     sudo apt install python3-pip -y
@@ -50,6 +50,14 @@ Login ke VPS Anda melalui SSH dan ikuti langkah-langkah berikut:
     ```bash
     nano /home/ubuntu/telegram_automation/config.json
     ```
+    **PENTING: KEAMANAN KREDENSIAL**
+    File `config.json` berisi informasi sensitif (API ID dan API Hash). Untuk alasan keamanan, **JANGAN PERNAH MENGUNGGAH `config.json` yang berisi kredensial asli Anda ke repositori publik seperti GitHub.**
+
+    **Rekomendasi:**
+    *   Untuk pengembangan lokal, Anda bisa menggunakan `config.json` dengan kredensial Anda.
+    *   Untuk deployment di lingkungan produksi (misalnya VPS), sangat disarankan untuk menggunakan **variabel lingkungan (environment variables)** untuk `API_ID` dan `API_HASH`.
+    *   Jika Anda tetap ingin menyertakan `config.json` di repositori (misalnya untuk tujuan dokumentasi), buatlah salinan `config.json.example` dengan nilai placeholder dan tambahkan `config.json` ke file `.gitignore` Anda.
+
     Isi `config.json` harus terlihat seperti ini (ganti nilai placeholder dengan informasi Anda):
     ```json
     {
@@ -62,8 +70,8 @@ Login ke VPS Anda melalui SSH dan ikuti langkah-langkah berikut:
         "delays": {
             "min_delay_message": 5,
             "max_delay_message": 10,
-            "min_delay_cycle": 1,
-            "max_delay_cycle": 2
+            "min_delay_cycle": 1.1,
+            "max_delay_cycle": 1.3
         }
     }
     ```
