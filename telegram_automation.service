@@ -1,0 +1,13 @@
+[Unit]
+Description=Telegram Automation Bot
+After=network.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/telegram_automation
+ExecStart=/usr/bin/python3 /home/ubuntu/telegram_automation/main.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
