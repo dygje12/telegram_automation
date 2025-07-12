@@ -1,9 +1,9 @@
 {
     "telegram": {
-        "api_id": 21507942, 
-        "api_hash": "399fae9734796b25b068050f5f03b698",
-        "message_source_channel": -1002779817596,
-        "group_list_channel": -1002790437700
+        "api_id": 1234567,           // Ganti dengan API ID Anda dari my.telegram.org
+        "api_hash": "your_api_hash_here", // Ganti dengan API Hash Anda dari my.telegram.org
+        "message_source_channel": "https://t.me/your_source_channel_username_or_id",
+        "group_list_channel": "https://t.me/your_group_list_channel_username_or_id"
     },
     "delays": {
         "min_delay_message": 5,
@@ -12,4 +12,3 @@
         "max_delay_cycle": 1.3
     }
 }
-
