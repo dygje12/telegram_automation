@@ -9,7 +9,6 @@ import json
 import os
 import random
 import time
-from typing import Optional, Union
 
 from telethon.errors import (
     ChatIdInvalidError,
@@ -78,24 +77,20 @@ async def get_groups_from_channel(channel_entity: Channel) -> list[int]:
                 except Exception as e:
                     log_activity(f"Gagal mendapatkan entitas dari {line}: {e}", status="WARNING")
                     blacklist = load_blacklist()
-                    blacklist_permanent: list[int] = blacklist.get("permanent", [])  # type: ignore
+                    blacklist_permanent: list[int | str] = blacklist.get("permanent", [])  # type: ignore
                     if line.isdigit():
-                        group_id = int(line)
+                        group_id_or_username: int | str = int(line)
                     else:
-                        # For non-numeric lines (usernames), we can't add them to the integer-based permanent blacklist directly.
-                        # A more robust solution would be to store usernames in a separate blacklist or resolve them to IDs if possible.
-                        # For now, we'll just log the warning and skip blacklisting.
-                        log_activity(f"Tidak dapat menambahkan '{line}' ke blacklist permanen karena bukan ID numerik.", status="WARNING")
-                        continue
+                        group_id_or_username = line
 
-                    if group_id not in blacklist_permanent:
-                        blacklist_permanent.append(group_id)
+                    if group_id_or_username not in blacklist_permanent:
+                        blacklist_permanent.append(group_id_or_username)
                         blacklist["permanent"] = blacklist_permanent
                         save_blacklist(blacklist)
     return groups
 
 
-def load_blacklist() -> dict[str, Union[list[int], dict[str, float]]]:
+def load_blacklist() -> dict[str, list[int | str] | dict[str, float]]:
     """Memuat daftar blacklist dari file JSON."""
     if os.path.exists(BLACKLIST_FILE):
         with open(BLACKLIST_FILE, encoding="utf-8") as blacklist_file_read:
@@ -106,14 +101,14 @@ def load_blacklist() -> dict[str, Union[list[int], dict[str, float]]]:
     return {"permanent": [], "temporary": {}}
 
 
-def save_blacklist(blacklist: dict[str, Union[list[int], dict[str, float]]]) -> None:
+def save_blacklist(blacklist: dict[str, list[int | str] | dict[str, float]]) -> None:
     with open(BLACKLIST_FILE, "w", encoding="utf-8") as blacklist_file_write:
         json.dump(blacklist, blacklist_file_write, indent=4)
 
 
 def clean_expired_blacklist(
-    blacklist: dict[str, Union[list[int], dict[str, float]]],
-) -> dict[str, Union[list[int], dict[str, float]]]:
+    blacklist: dict[str, list[int | str] | dict[str, float]],
+) -> dict[str, list[int | str] | dict[str, float]]:
     """Membersihkan entri blacklist sementara yang sudah kadaluarsa."""
     current_time = time.time()
     temporary_blacklist = blacklist.get("temporary", {})
@@ -136,9 +131,9 @@ def clean_expired_blacklist(
 
 def log_activity(
     message: str,
-    group_id: Optional[int] = None,
+    group_id: int | None = None,
     status: str = "INFO",
-    error: Optional[Exception] = None,
+    error: Exception | None = None,
 ) -> None:
     """Mencatat aktivitas aplikasi ke file log dan konsol."""
     timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
@@ -168,7 +163,7 @@ async def send_message_to_group(group_id: int, message_text: str) -> bool:
     ) as e:
         log_activity(f"Gagal mengirim pesan: {e}", group_id=group_id, status="FAILED", error=e)
         blacklist = load_blacklist()
-        blacklist_permanent: list[int] = blacklist.get("permanent", [])  # type: ignore
+        blacklist_permanent: list[int | str] = blacklist.get("permanent", [])  # type: ignore
         if group_id not in blacklist_permanent:
             blacklist_permanent.append(group_id)
             blacklist["permanent"] = blacklist_permanent
@@ -247,7 +242,7 @@ async def main() -> None:
         valid_groups = [
             g
             for g in groups
-            if g not in blacklist["permanent"] and str(g) not in blacklist["temporary"]
+            if g not in blacklist.get("permanent", []) and str(g) not in blacklist.get("temporary", {})
         ]
         if not valid_groups:
             log_activity(
